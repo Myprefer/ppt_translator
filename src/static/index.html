@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPT翻译软件</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .upload-section {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section:hover {
+            border-color: #667eea;
+            background-color: #f8f9ff;
+        }
+
+        .upload-section.dragover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #fff;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .translate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .translate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .translate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-section {
+            display: none;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #e1e5e9;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                transparent 25%, 
+                rgba(255,255,255,0.2) 25%, 
+                rgba(255,255,255,0.2) 50%, 
+                transparent 50%, 
+                transparent 75%, 
+                rgba(255,255,255,0.2) 75%);
+            background-size: 20px 20px;
+            animation: progressStripes 1s linear infinite;
+        }
+
+        @keyframes progressStripes {
+            0% { background-position: 0 0; }
+            100% { background-position: 20px 0; }
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #555;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .progress-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .progress-percentage {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .result-section {
+            display: none;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            color: #4caf50;
+            margin-bottom: 20px;
+        }
+
+        .download-btn {
+            padding: 12px 30px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .file-info {
+            display: none;
+            background: #f8f9ff;
+            border: 1px solid #e1e5e9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .file-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .local-files-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .local-files-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .local-files-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .file-info-local {
+            flex: 1;
+        }
+
+        .file-info-local h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .file-info-local p {
+            margin: 0;
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .file-actions button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .download-local-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .download-local-btn:hover {
+            background: #45a049;
+        }
+
+        .delete-local-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .delete-local-btn:hover {
+            background: #da190b;
+        }
+
+        .no-files-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .model-info {
+            margin-top: 8px;
+            padding: 10px;
+            background: #f8f9ff;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+
+        .model-info small {
+            color: #666;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .model-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .cost-low {
+            background: #4caf50;
+            color: white;
+        }
+
+        .cost-medium {
+            background: #ff9800;
+            color: white;
+        }
+
+        .cost-high {
+            background: #f44336;
+            color: white;
+        }
+
+        .model-help-link {
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 5px;
+            text-decoration: underline;
+        }
+
+        .model-help-link:hover {
+            color: #5a67d8;
+        }
+
+        .model-help-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .model-help-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .model-help-close {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .model-help-close:hover {
+            color: #333;
+        }
+
+        .model-comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .model-comparison-table th,
+        .model-comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .model-comparison-table th {
+            background-color: #f8f9ff;
+            font-weight: 600;
+        }
+
+        .model-comparison-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 PPT翻译软件</h1>
+            <p>基于AI的智能PPT文档翻译工具，保持原有格式的同时提供高质量翻译</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">点击选择或拖拽PPT文件到此处</div>
+            <div class="upload-subtext">支持 .pptx 格式文件，最大50MB</div>
+            <input type="file" id="fileInput" class="file-input" accept=".pptx" />
+        </div>
+
+        <div class="file-info" id="fileInfo">
+            <h4 id="fileName"></h4>
+            <p id="fileSize"></p>
+        </div>
+
+        <div class="form-group">
+            <div class="form-row">
+                <div>
+                    <label for="sourceLanguage">源语言</label>
+                    <select id="sourceLanguage">
+                        <option value="auto">自动检测</option>
+                        <option value="zh">中文</option>
+                        <option value="en">英语</option>
+                        <option value="ja">日语</option>
+                        <option value="ko">韩语</option>
+                        <option value="fr">法语</option>
+                        <option value="de">德语</option>
+                        <option value="es">西班牙语</option>
+                        <option value="ru">俄语</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="targetLanguage">目标语言</label>
+                    <select id="targetLanguage">
+                        <option value="zh">中文</option>
+                        <option value="en">英语</option>
+                        <option value="ja">日语</option>
+                        <option value="ko">韩语</option>
+                        <option value="fr">法语</option>
+                        <option value="de">德语</option>
+                        <option value="es">西班牙语</option>
+                        <option value="ru">俄语</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="apiKey">Qwen API密钥</label>
+            <input type="text" id="apiKey" placeholder="请输入您的Qwen API密钥" />
+        </div>
+
+        <div class="form-group">
+            <label for="modelSelect">
+                翻译模型
+                <span class="model-help-link" onclick="showModelHelp()">(?)</span>
+            </label>
+            <select id="modelSelect">
+                <option value="">加载中...</option>
+            </select>
+            <div class="model-info" id="modelInfo">
+                <small id="modelDescription">选择一个模型查看详细信息</small>
+            </div>
+        </div>
+
+        <button class="translate-btn" id="translateBtn" onclick="startTranslation()">
+            开始翻译
+        </button>
+
+        <div class="progress-section" id="progressSection">
+            <div class="progress-text" id="progressText">正在处理中...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-details">
+                <span id="progressSlideInfo">准备中...</span>
+                <span class="progress-percentage" id="progressPercentage">0%</span>
+            </div>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div class="success-icon">✅</div>
+            <h3>翻译完成！</h3>
+            <p>您的PPT文件已成功翻译完成并保存到本地</p>
+            <br>
+            <a href="#" class="download-btn" id="downloadBtn">下载翻译后的文件</a>
+            <button class="download-btn" onclick="showLocalFiles()" style="margin-left: 10px; background: #2196F3;">查看本地文件</button>
+        </div>
+
+        <div class="local-files-section" id="localFilesSection" style="display: none;">
+            <h3>本地保存的翻译文件</h3>
+            <div class="local-files-list" id="localFilesList">
+                <!-- 文件列表将在这里动态加载 -->
+            </div>
+            <button class="download-btn" onclick="hideLocalFiles()" style="background: #666; margin-top: 20px;">关闭</button>
+        </div>
+
+        <!-- 模型帮助弹窗 -->
+        <div class="model-help-modal" id="modelHelpModal">
+            <div class="model-help-content">
+                <span class="model-help-close" onclick="hideModelHelp()">&times;</span>
+                <h2>翻译模型选择指南</h2>
+                <p>不同的翻译模型有不同的特点和适用场景，请根据您的需求选择：</p>
+                
+                <table class="model-comparison-table">
+                    <thead>
+                        <tr>
+                            <th>模型</th>
+                            <th>速度</th>
+                            <th>质量</th>
+                            <th>成本</th>
+                            <th>最大令牌</th>
+                            <th>推荐场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Qwen-Turbo</strong></td>
+                            <td>⚡⚡⚡</td>
+                            <td>⭐⭐</td>
+                            <td>💰</td>
+                            <td>4,000</td>
+                            <td>大量文本、快速翻译、成本敏感</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Qwen-Plus</strong></td>
+                            <td>⚡⚡</td>
+                            <td>⭐⭐⭐</td>
+                            <td>💰💰</td>
+                            <td>8,000</td>
+                            <td>平衡性能与成本，日常使用</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Qwen-Max</strong></td>
+                            <td>⚡</td>
+                            <td>⭐⭐⭐⭐</td>
+                            <td>💰💰💰</td>
+                            <td>16,000</td>
+                            <td>高质量翻译、专业文档</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Qwen-Max-LongContext</strong></td>
+                            <td>⚡</td>
+                            <td>⭐⭐⭐⭐</td>
+                            <td>💰💰💰</td>
+                            <td>32,000</td>
+                            <td>超长文档、复杂上下文</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>选择建议</h3>
+                <ul>
+                    <li><strong>新手用户</strong>: 推荐 Qwen-Plus，平衡性能与成本</li>
+                    <li><strong>大量翻译</strong>: 推荐 Qwen-Turbo，成本低速度快</li>
+                    <li><strong>专业翻译</strong>: 推荐 Qwen-Max，质量最高</li>
+                    <li><strong>超长文档</strong>: 推荐 Qwen-Max-LongContext，支持长上下文</li>
+                </ul>
+
+                <h3>注意事项</h3>
+                <ul>
+                    <li>模型质量越高，翻译时间可能越长</li>
+                    <li>高质量模型的API调用成本更高</li>
+                    <li>选择合适的模型可以在质量和成本之间找到平衡</li>
+                    <li>可以先用低成本模型测试，满意后再用高质量模型</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        // 文件上传相关
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+
+        uploadSection.addEventListener('click', () => fileInput.click());
+        uploadSection.addEventListener('dragover', handleDragOver);
+        uploadSection.addEventListener('dragleave', handleDragLeave);
+        uploadSection.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.name.toLowerCase().endsWith('.pptx')) {
+                showError('请选择.pptx格式的文件');
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) { // 50MB
+                showError('文件大小不能超过50MB');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = `文件大小: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            fileInfo.style.display = 'block';
+            hideError();
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function updateProgress(percent, text, currentSlide, totalSlides) {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressSlideInfo = document.getElementById('progressSlideInfo');
+            const progressPercentage = document.getElementById('progressPercentage');
+            
+            // 更新进度条
+            progressFill.style.width = Math.round(percent) + '%';
+            
+            // 更新主要状态文本
+            progressText.textContent = text;
+            
+            // 更新百分比
+            progressPercentage.textContent = Math.round(percent) + '%';
+            
+            // 更新幻灯片信息
+            if (currentSlide !== undefined && totalSlides !== undefined && totalSlides > 0) {
+                progressSlideInfo.textContent = `第 ${currentSlide} 页 / 共 ${totalSlides} 页`;
+            } else {
+                progressSlideInfo.textContent = '准备中...';
+            }
+        }
+
+        async function startTranslation() {
+            if (!selectedFile) {
+                showError('请先选择一个PPT文件');
+                return;
+            }
+
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (!apiKey) {
+                showError('请输入Qwen API密钥');
+                return;
+            }
+
+            const sourceLanguage = document.getElementById('sourceLanguage').value;
+            const targetLanguage = document.getElementById('targetLanguage').value;
+            const selectedModel = document.getElementById('modelSelect').value;
+
+            if (sourceLanguage === targetLanguage && sourceLanguage !== 'auto') {
+                showError('源语言和目标语言不能相同');
+                return;
+            }
+
+            if (!selectedModel) {
+                showError('请选择翻译模型');
+                return;
+            }
+
+            hideError();
+
+            // 显示进度条
+            document.getElementById('translateBtn').disabled = true;
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultSection').style.display = 'none';
+
+            try {
+                // 创建FormData
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('source_language', sourceLanguage);
+                formData.append('target_language', targetLanguage);
+                formData.append('api_key', apiKey);
+                formData.append('model', selectedModel);
+
+                updateProgress(5, `正在上传文件... 使用模型: ${availableModels[selectedModel]?.name || selectedModel}`);
+
+                // 发送请求到后端
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || '翻译失败');
+                }
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.message);
+                }
+
+                // 开始监听进度更新
+                const taskId = result.task_id;
+                const eventSource = new EventSource(`/api/progress/${taskId}`);
+                
+                eventSource.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        if (data.error) {
+                            eventSource.close();
+                            showError(data.message);
+                            document.getElementById('progressSection').style.display = 'none';
+                            return;
+                        }
+                        
+                        updateProgress(
+                            data.progress, 
+                            data.status, 
+                            data.current_slide, 
+                            data.total_slides
+                        );
+                        
+                        if (data.completed) {
+                            eventSource.close();
+                            
+                            // 显示结果
+                            document.getElementById('progressSection').style.display = 'none';
+                            document.getElementById('resultSection').style.display = 'block';
+                            document.getElementById('downloadBtn').href = data.download_url;
+                        }
+                    } catch (e) {
+                        console.error('解析进度数据时出错:', e);
+                    }
+                };
+                
+                eventSource.onerror = function(event) {
+                    eventSource.close();
+                    showError('连接服务器出错，请重试');
+                    document.getElementById('progressSection').style.display = 'none';
+                };
+
+            } catch (error) {
+                showError('翻译过程中出现错误: ' + error.message);
+                document.getElementById('progressSection').style.display = 'none';
+            } finally {
+                document.getElementById('translateBtn').disabled = false;
+            }
+        }
+
+        // 本地文件管理函数
+        async function showLocalFiles() {
+            try {
+                const response = await fetch('/api/local-files');
+                const result = await response.json();
+                
+                if (result.error) {
+                    showError('获取本地文件列表失败: ' + result.message);
+                    return;
+                }
+                
+                const localFilesSection = document.getElementById('localFilesSection');
+                const localFilesList = document.getElementById('localFilesList');
+                
+                if (result.files.length === 0) {
+                    localFilesList.innerHTML = '<div class="no-files-message">暂无本地保存的文件</div>';
+                } else {
+                    localFilesList.innerHTML = result.files.map(file => `
+                        <div class="file-item">
+                            <div class="file-info-local">
+                                <h4>${file.filename}</h4>
+                                <p>大小: ${(file.size / 1024 / 1024).toFixed(2)} MB | 创建时间: ${file.created_time}</p>
+                            </div>
+                            <div class="file-actions">
+                                <button class="download-local-btn" onclick="downloadLocalFile('${file.filename}')">下载</button>
+                                <button class="delete-local-btn" onclick="deleteLocalFile('${file.filename}')">删除</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                localFilesSection.style.display = 'block';
+                
+            } catch (error) {
+                showError('获取本地文件列表时出错: ' + error.message);
+            }
+        }
+
+        function hideLocalFiles() {
+            document.getElementById('localFilesSection').style.display = 'none';
+        }
+
+        async function downloadLocalFile(filename) {
+            try {
+                window.open(`/api/download-local/${filename}`, '_blank');
+            } catch (error) {
+                showError('下载文件时出错: ' + error.message);
+            }
+        }
+
+        async function deleteLocalFile(filename) {
+            if (!confirm(`确定要删除文件 "${filename}" 吗？此操作不可恢复。`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/delete-local/${filename}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    showError('删除文件失败: ' + result.message);
+                    return;
+                }
+                
+                // 重新加载文件列表
+                showLocalFiles();
+                
+            } catch (error) {
+                showError('删除文件时出错: ' + error.message);
+            }
+        }
+
+        // 模型相关变量
+        let availableModels = {};
+
+        // 页面加载时加载模型列表
+        async function loadModels() {
+            try {
+                const response = await fetch('/api/models');
+                const result = await response.json();
+                
+                if (result.error) {
+                    console.error('加载模型失败:', result.message);
+                    document.getElementById('modelSelect').innerHTML = '<option value="qwen-turbo">Qwen-Turbo (默认)</option>';
+                    return;
+                }
+                
+                availableModels = result.models;
+                const modelSelect = document.getElementById('modelSelect');
+                
+                // 清空选项
+                modelSelect.innerHTML = '';
+                
+                // 添加模型选项
+                Object.keys(availableModels).forEach(modelKey => {
+                    const model = availableModels[modelKey];
+                    const option = document.createElement('option');
+                    option.value = modelKey;
+                    option.textContent = `${model.name} - ${model.description}`;
+                    if (modelKey === 'qwen-turbo') {
+                        option.selected = true; // 默认选择qwen-turbo
+                    }
+                    modelSelect.appendChild(option);
+                });
+                
+                // 显示默认模型信息
+                updateModelInfo('qwen-turbo');
+                
+            } catch (error) {
+                console.error('加载模型时出错:', error);
+                document.getElementById('modelSelect').innerHTML = '<option value="qwen-turbo">Qwen-Turbo (默认)</option>';
+            }
+        }
+
+        // 更新模型信息显示
+        function updateModelInfo(modelKey) {
+            const modelInfo = document.getElementById('modelInfo');
+            const modelDescription = document.getElementById('modelDescription');
+            
+            if (availableModels[modelKey]) {
+                const model = availableModels[modelKey];
+                const costClass = model.cost === '低' ? 'cost-low' : 
+                                model.cost === '中' ? 'cost-medium' : 'cost-high';
+                
+                modelDescription.innerHTML = `
+                    <strong>${model.name}</strong>
+                    <span class="model-badge ${costClass}">成本: ${model.cost}</span>
+                    <br>
+                    ${model.description}
+                    <br>
+                    最大令牌数: ${model.max_tokens.toLocaleString()}
+                `;
+                modelInfo.style.display = 'block';
+            } else {
+                modelDescription.textContent = '选择一个模型查看详细信息';
+                modelInfo.style.display = 'none';
+            }
+        }
+
+        // 监听模型选择变化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadModels();
+            
+            const modelSelect = document.getElementById('modelSelect');
+            modelSelect.addEventListener('change', function() {
+                updateModelInfo(this.value);
+            });
+        });
+
+        // 页面加载时的动画效果
+        window.addEventListener('load', () => {
+            document.querySelector('.container').style.opacity = '1';
+        });
+
+        // 模型帮助弹窗相关
+        function showModelHelp() {
+            document.getElementById('modelHelpModal').style.display = 'block';
+        }
+
+        function hideModelHelp() {
+            document.getElementById('modelHelpModal').style.display = 'none';
+        }
+
+        // 点击弹窗外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('modelHelpModal');
+            if (event.target === modal) {
+                hideModelHelp();
+            }
+        }
+    </script>
+</body>
+</html>
+
